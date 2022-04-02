@@ -1,4 +1,4 @@
-# couchbase_lite_example
+# Flutter couchbase lite  
 
 Demonstrates how to use the couchbase_lite plugin.
 
