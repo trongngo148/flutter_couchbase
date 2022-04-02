@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:couchbase_lite/couchbase_lite.dart';
-import 'package:couchbase_lite_example/colors.dart';
+import 'package:couchbase_lite_example/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// void main() => runApp(BeerSampleApp(AppMode.production));
 void main() => runApp(ExampleApp());
 
 class ExampleApp extends StatefulWidget {
@@ -17,6 +16,7 @@ class _ExampleAppState extends State<ExampleApp> {
   late Database database;
   Replicator? replicator;
   late ListenerToken _listenerToken;
+  late ListenerToken _listenerDocumentToken;
 
   late TextEditingController _usernameController;
   @override
@@ -33,44 +33,17 @@ class _ExampleAppState extends State<ExampleApp> {
       return "Error initializing database";
     }
 
-    // Create a new document (i.e. a record) in the database.
-    MutableDocument? mutableDoc = MutableDocument().setDouble("version", 2.0).setString("type", "SDK");
-
-    // Save it to the database.
-    try {
-      await database.saveDocument(mutableDoc);
-    } on PlatformException {
-      return "Error saving document";
-    }
-
-    // Update a document.
-    mutableDoc = (await database.document(mutableDoc.id!))?.toMutable().setString("language", "Dart");
-
-    if (mutableDoc != null) {
-      try {
-        await database.saveDocument(mutableDoc);
-
-        var document = await (database.document(mutableDoc.id!));
-
-        print("Document ID :: ${document!.id}");
-        print("Learning ${document.getString("language")}");
-      } on PlatformException {
-        return "Error saving document";
-      }
-    }
-
-    // Create a query to fetch documents of type SDK.
-    var query = QueryBuilder.select([SelectResult.all()]).from("gettingStarted").where(Expression.property("type").equalTo(Expression.string("SDK")));
+    var query = QueryBuilder.select([SelectResult.all()]).from("gettingStarted");
 
     // Run the query.
     try {
       var result = await query.execute();
-      print("Number of rows :: ${result.allResults().length}");
+      print("Number of rows : ${result.allResults().length}");
     } on PlatformException {
       return "Error running the query";
     }
 
-    ReplicatorConfiguration config = ReplicatorConfiguration(database, "ws://10.0.2.2:4984/beer-sample");
+    ReplicatorConfiguration config = ReplicatorConfiguration(database, "ws://10.0.2.2:4985/beer-sample");
     config.replicatorType = ReplicatorType.pushAndPull;
     config.continuous = true;
 
@@ -98,6 +71,19 @@ class _ExampleAppState extends State<ExampleApp> {
     setState(() {
       _displayString = result;
     });
+  }
+
+  Future<void> printDocument() async {
+    var query =
+        QueryBuilder.select([SelectResult.all()]).from("gettingStarted").where(Expression.property("Test").equalTo(Expression.string("Trong 1156")));
+
+    // Run the query.
+    try {
+      var result = await query.execute();
+      print("Number of rows : ${result.allResults().length}");
+    } on PlatformException {
+      print("Error running the query");
+    }
   }
 
   ThemeData _buildTheme() {
@@ -148,7 +134,6 @@ class _ExampleAppState extends State<ExampleApp> {
             ),
             InkWell(
               onTap: () async {
-                print("object");
                 MutableDocument? mutableDoc = MutableDocument().setString("Test", _usernameController.text);
 
                 // Save it to the database.
@@ -158,7 +143,7 @@ class _ExampleAppState extends State<ExampleApp> {
                   print("Error saving document");
                 }
                 var document = await database.document(mutableDoc.id.toString());
-                print("Document ID :: ${document!.id}");
+                print("Document ID :: ${document.id}");
               },
               child: Container(
                 height: 50,
@@ -167,6 +152,24 @@ class _ExampleAppState extends State<ExampleApp> {
                 child: Center(
                     child: Text(
                   "Send Simple Data",
+                  style: TextStyle(color: Colors.white),
+                )),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            InkWell(
+              onTap: () async {
+                printDocument();
+              },
+              child: Container(
+                height: 50,
+                width: 200,
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(30), color: Colors.blue),
+                child: Center(
+                    child: Text(
+                  "Search Document",
                   style: TextStyle(color: Colors.white),
                 )),
               ),
