@@ -10,7 +10,10 @@ import 'configs/routes.dart';
 import 'configs/theme.dart';
 import 'home/providers/home_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Now initialize Couchbase Lite.
   runApp(
     MultiProvider(
       providers: [Provider(create: (context) => HomeProvider())],

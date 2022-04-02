@@ -1,6 +1,9 @@
 import 'package:couchbase_lite/couchbase_lite.dart';
+import 'package:couchbase_lite_example/home/domain/models/user_record.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../../configs/styles.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,12 +18,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Replicator? replicator;
   late ListenerToken _listenerToken;
 
-  late TextEditingController _usernameController;
+  late TextEditingController _textInputController;
   @override
   void initState() {
     super.initState();
     initPlatformState();
-    _usernameController = TextEditingController();
+    _textInputController = TextEditingController();
   }
 
   Future<String> runExample() async {
@@ -83,10 +86,22 @@ class _HomeScreenState extends State<HomeScreen> {
     } on PlatformException {
       print("Error running the query");
     }
+
+    var doc = database.document("e2f5d8f5-2f31-4972-9210-c34d80d7c817");
+    var result = doc.asStream().toList();
+    result.then((v) => {print(v)});
+    print(doc.asStream().toList());
   }
 
   Future<void> createInitDocument() async {
-    MutableDocument? mutableDoc = MutableDocument().setString("Test", _usernameController.text);
+    var userRecord = UserRecord(
+      type: "user",
+      name: "TrongNgo",
+      user: "foo",
+      address: "ABC 123",
+      university: "CanTho University",
+    );
+    MutableDocument? mutableDoc = MutableDocument().setData(userRecord.toJson);
 
     // Save it to the database.
     try {
@@ -95,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
       print("Error saving document");
     }
     var document = await database.document(mutableDoc.id.toString());
-    print("Document ID :: ${document.id}");
+    print("Document ID : ${document.id}");
   }
 
   @override
@@ -104,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Plugin example app'),
       ),
-      body: getBody(),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30),
+        child: getBody(),
+      ),
     );
   }
 
@@ -115,22 +133,22 @@ class _HomeScreenState extends State<HomeScreen> {
         Center(
           child: Text(_displayString),
         ),
-        Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: TextField(
-            textInputAction: TextInputAction.next,
-            controller: _usernameController,
-            decoration: InputDecoration(
-              labelText: 'Text',
-            ),
+        SizedBox(
+          height: 20,
+        ),
+        TextField(
+          textInputAction: TextInputAction.next,
+          controller: _textInputController,
+          decoration: InputDecoration(
+            labelText: 'Text',
           ),
         ),
         SizedBox(
           height: 20,
         ),
-        InkWell(
-          onTap: () async {
-            MutableDocument? mutableDoc = MutableDocument().setString("Test", _usernameController.text);
+        ElevatedButton(
+          onPressed: () async {
+            MutableDocument? mutableDoc = MutableDocument().setString("Test", _textInputController.text);
 
             // Save it to the database.
             try {
@@ -139,35 +157,58 @@ class _HomeScreenState extends State<HomeScreen> {
               print("Error saving document");
             }
             var document = await database.document(mutableDoc.id.toString());
-            print("Document ID :: ${document.id}");
+            print("Document ID: ${document.id}");
           },
-          child: Container(
-            height: 50,
-            width: 200,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(30), color: Colors.blue),
-            child: Center(
+          style: raisedButtonStyle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            child: Container(
+              width: 160,
+              child: Center(
                 child: Text(
-              "Send Simple Data",
-              style: TextStyle(color: Colors.white),
-            )),
+                  "Send Text",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+            ),
           ),
         ),
         SizedBox(
           height: 20,
         ),
-        InkWell(
-          onTap: () async {
-            printDocument();
-          },
-          child: Container(
-            height: 50,
-            width: 200,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(30), color: Colors.blue),
-            child: Center(
+        ElevatedButton(
+          onPressed: () async => printDocument(),
+          style: raisedButtonStyle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            child: Container(
+              width: 160,
+              child: Center(
                 child: Text(
-              "Search Document",
-              style: TextStyle(color: Colors.white),
-            )),
+                  "Search Document",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 20,
+        ),
+        ElevatedButton(
+          onPressed: () async => createInitDocument(),
+          style: raisedButtonStyle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            child: Container(
+              width: 160,
+              child: Center(
+                child: Text(
+                  "Create Document",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+            ),
           ),
         )
       ],
